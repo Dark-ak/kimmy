@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - CUTOFF_TIME=09:00
+      - TIMEZONE=UTC
+      - DATA_START_DATE=2026-01-02
+      - DATA_END_DATE=2026-02-01
+    volumes:
+      - ./backend/data:/app/data
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+      - NEXT_PUBLIC_USE_MOCK=false
+    depends_on:
+      - backend

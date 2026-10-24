@@ -1,0 +1,63 @@
+# Byte-compiled / optimized / C-extension files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environments (uv, venv, virtualenv)
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# Packaging & Build
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+*.egg-info/
+*.egg
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# SQLite journal & WAL files
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite-journal
+
+# Temporary / Cache files
+.cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE & Editor specific
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
