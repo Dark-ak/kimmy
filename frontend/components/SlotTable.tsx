@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table"
 import { ForecastSlot } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { formatUtcHour, formatUtcDateTime, formatUtcPublishTime } from "@/lib/format"
 
 interface SlotTableProps {
   slots: ForecastSlot[]
@@ -98,7 +99,7 @@ export function SlotTable({ slots, loading }: SlotTableProps) {
     ]
 
     const rows = sortedSlots.map((s) => [
-      format(new Date(s.startTime), "HH:00"),
+      formatUtcHour(s.startTime),
       s.startTime,
       s.actual ?? "",
       s.forecast ?? "MISSING",
@@ -123,111 +124,119 @@ export function SlotTable({ slots, loading }: SlotTableProps) {
 
   const renderSortIndicator = (field: SortField) => {
     if (sortField !== field) {
-      return <ArrowUpDown className="ml-1 size-3.5 opacity-40" />
+      return <ArrowUpDown className="ml-1 size-3 text-muted-foreground/50" />
     }
     return sortOrder === "asc" ? (
-      <ArrowUp className="ml-1 size-3.5 text-primary" />
+      <ArrowUp className="ml-1 size-3 text-foreground" />
     ) : (
-      <ArrowDown className="ml-1 size-3.5 text-primary" />
+      <ArrowDown className="ml-1 size-3 text-foreground" />
+    )
+  }
+
+  if (loading) {
+    return (
+      <Card className="border-border/80 bg-card shadow-none">
+        <CardHeader className="py-4">
+          <div className="h-5 w-48 animate-pulse rounded bg-muted" />
+        </CardHeader>
+      </Card>
     )
   }
 
   return (
-    <Card className="overflow-hidden border-border/80 bg-card shadow-none">
-      <CardHeader className="flex flex-col gap-3 border-b border-border/60 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex cursor-pointer items-center gap-2 select-none" onClick={() => setIsOpen(!isOpen)}>
-          <Button variant="ghost" size="icon-xs" className="size-6 p-0">
-            {isOpen ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+    <Card className="border-border/80 bg-card shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between py-3.5">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsOpen(!isOpen)}
+            className="-ml-2 flex items-center gap-1.5 text-sm font-semibold text-foreground hover:bg-muted"
+          >
+            {isOpen ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
+            <span>Hourly Settlement Slot Ledger</span>
+            <Badge variant="outline" className="ml-1 text-xs font-normal">
+              {slots.length} slots
+            </Badge>
           </Button>
-          <div>
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-              <span>Hourly Forecast & Slot Details</span>
-              <Badge variant="secondary" className="px-2 py-0.5 text-[11px] font-normal">
-                {slots.length} hourly slots
-              </Badge>
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Hourly wind generation actuals, day-ahead cutoff forecasts, and quantified errors
-            </CardDescription>
-          </div>
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handleDownloadCsv}
-            disabled={slots.length === 0 || loading}
-            className="h-8 gap-1.5 text-xs"
+            disabled={!slots.length}
+            className="h-8 gap-1.5 text-xs font-medium"
           >
             <Download className="size-3.5" />
-            <span>Download CSV</span>
+            <span>Export CSV</span>
           </Button>
         </div>
       </CardHeader>
 
       {isOpen && (
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="border-t border-border/80">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/40 text-xs hover:bg-muted/40">
+                <TableRow className="text-xs hover:bg-transparent">
                   <TableHead
-                    className="w-40 cursor-pointer font-semibold text-foreground select-none"
+                    className="cursor-pointer select-none font-semibold text-muted-foreground hover:text-foreground"
                     onClick={() => handleSort("startTime")}
                   >
                     <div className="flex items-center">
-                      Hour (UTC)
+                      <span>Delivery Slot (UTC)</span>
                       {renderSortIndicator("startTime")}
                     </div>
                   </TableHead>
 
                   <TableHead
-                    className="cursor-pointer text-right font-semibold text-foreground select-none"
+                    className="cursor-pointer select-none text-right font-semibold text-muted-foreground hover:text-foreground"
                     onClick={() => handleSort("actual")}
                   >
                     <div className="flex items-center justify-end">
-                      Actual (MW)
+                      <span>Actual (MW)</span>
                       {renderSortIndicator("actual")}
                     </div>
                   </TableHead>
 
                   <TableHead
-                    className="cursor-pointer text-right font-semibold text-foreground select-none"
+                    className="cursor-pointer select-none text-right font-semibold text-muted-foreground hover:text-foreground"
                     onClick={() => handleSort("forecast")}
                   >
                     <div className="flex items-center justify-end">
-                      Forecast (MW)
+                      <span>Day-Ahead Forecast</span>
                       {renderSortIndicator("forecast")}
                     </div>
                   </TableHead>
 
                   <TableHead
-                    className="cursor-pointer text-right font-semibold text-foreground select-none"
+                    className="cursor-pointer select-none text-right font-semibold text-muted-foreground hover:text-foreground"
                     onClick={() => handleSort("error")}
                   >
                     <div className="flex items-center justify-end">
-                      Error (MW)
+                      <span>Error (F - A)</span>
                       {renderSortIndicator("error")}
                     </div>
                   </TableHead>
 
                   <TableHead
-                    className="cursor-pointer text-right font-semibold text-foreground select-none"
+                    className="cursor-pointer select-none text-right font-semibold text-muted-foreground hover:text-foreground"
                     onClick={() => handleSort("errorPercent")}
                   >
                     <div className="flex items-center justify-end">
-                      Error (%)
+                      <span>Error %</span>
                       {renderSortIndicator("errorPercent")}
                     </div>
                   </TableHead>
 
                   <TableHead
-                    className="cursor-pointer font-semibold text-foreground select-none"
+                    className="cursor-pointer select-none font-semibold text-muted-foreground hover:text-foreground"
                     onClick={() => handleSort("publishTime")}
                   >
                     <div className="flex items-center">
-                      Forecast Published At
+                      <span>Forecast Published (UTC)</span>
                       {renderSortIndicator("publishTime")}
                     </div>
                   </TableHead>
@@ -243,13 +252,12 @@ export function SlotTable({ slots, loading }: SlotTableProps) {
                   </TableRow>
                 ) : (
                   paginatedSlots.map((slot, idx) => {
-                    const slotDate = new Date(slot.startTime)
                     const isMissing = slot.forecast === null
 
                     return (
                       <TableRow key={idx} className="text-xs hover:bg-muted/30">
                         <TableCell className="font-mono font-medium">
-                          {format(slotDate, "d MMM HH:00")}
+                          {formatUtcDateTime(slot.startTime)}
                         </TableCell>
 
                         <TableCell className="text-right font-mono tabular-nums">
@@ -298,7 +306,7 @@ export function SlotTable({ slots, loading }: SlotTableProps) {
 
                         <TableCell className="font-mono text-muted-foreground">
                           {slot.publishTime
-                            ? format(new Date(slot.publishTime), "d MMM, HH:mm 'UTC'")
+                            ? formatUtcPublishTime(slot.publishTime)
                             : "None (< cutoff)"}
                         </TableCell>
                       </TableRow>

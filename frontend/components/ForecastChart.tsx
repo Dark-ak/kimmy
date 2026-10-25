@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
 import {
   ComposedChart,
   Line,
@@ -21,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ChartConfig, ChartContainer } from "@/components/ui/chart"
 import { ForecastSlot } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { formatUtcHour, formatUtcDate, formatUtcDateTime, formatUtcPublishTime } from "@/lib/format"
 
 interface ForecastChartProps {
   slots: ForecastSlot[]
@@ -78,7 +78,7 @@ function ForecastChartTooltip({ active, payload }: TooltipProps) {
       ? `${data.error > 0 ? "+" : ""}${data.error.toLocaleString()} MW`
       : "N/A"
   const pubDateStr = data.publishTime
-    ? format(new Date(data.publishTime), "d MMM, HH:mm 'UTC'")
+    ? formatUtcPublishTime(data.publishTime)
     : "None published before 09:00 cutoff"
 
   return (
@@ -147,11 +147,10 @@ export function ForecastChart({
     )
   }
 
-  // Transform data for Recharts
+  // Transform data for Recharts (all times formatted strictly in UTC)
   const chartData: ChartItem[] = slots.map((s, idx) => {
-    const d = new Date(s.startTime)
-    const timeOnly = format(d, "HH:00")
-    const dateFormatted = format(d, "d MMM")
+    const timeOnly = formatUtcHour(s.startTime)
+    const dateFormatted = formatUtcDate(s.startTime)
     const hasErrorRange =
       typeof s.typicalErrorLower === "number" && typeof s.typicalErrorUpper === "number"
 
@@ -209,14 +208,13 @@ export function ForecastChart({
               minTickGap={24}
               interval={tickInterval}
               tickFormatter={(timeStr: string) => {
-                const d = new Date(timeStr)
                 if (slots.length <= 24) {
-                  return format(d, "HH:00")
+                  return formatUtcHour(timeStr)
                 }
                 if (slots.length <= 72) {
-                  return format(d, "d MMM HH:00")
+                  return formatUtcDateTime(timeStr)
                 }
-                return format(d, "d MMM")
+                return formatUtcDate(timeStr)
               }}
               tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
             />
